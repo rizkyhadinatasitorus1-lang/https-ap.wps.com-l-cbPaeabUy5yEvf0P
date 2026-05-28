@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-cloud-sun"></i> Weather Dashboard</h1>
+                <p>Real-time weather information worldwide</p>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Search city... (e.g., London, Tokyo, New York)"
+                    autocomplete="off"
+                >
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button class="location-btn" id="locationBtn" title="Use Current Location">
+                    <i class="fas fa-location-dot"></i>
+                </button>
+            </div>
+            <div class="suggestions" id="suggestions"></div>
+        </section>
+
+        <!-- Quick Cities -->
+        <section class="quick-cities">
+            <h3>Quick Access:</h3>
+            <div class="quick-buttons">
+                <button class="quick-btn" data-city="London">🇬🇧 London</button>
+                <button class="quick-btn" data-city="New York">🗽 New York</button>
+                <button class="quick-btn" data-city="Tokyo">🇯🇵 Tokyo</button>
+                <button class="quick-btn" data-city="Dubai">🇦🇪 Dubai</button>
+                <button class="quick-btn" data-city="Sydney">🇦🇺 Sydney</button>
+                <button class="quick-btn" data-city="Paris">🇫🇷 Paris</button>
+            </div>
+        </section>
+
+        <!-- Current Weather -->
+        <section class="current-weather" id="currentWeather">
+            <!-- Will be populated by JS -->
+        </section>
+
+        <!-- Forecast Section -->
+        <section class="forecast-section">
+            <h2>5-Day Forecast</h2>
+            <div class="forecast-grid" id="forecastGrid">
+                <!-- Will be populated by JS -->
+            </div>
+        </section>
+
+        <!-- Hourly Forecast -->
+        <section class="hourly-section">
+            <h2>Hourly Forecast (24 Hours)</h2>
+            <div class="hourly-scroll" id="hourlyScroll">
+                <!-- Will be populated by JS -->
+            </div>
+        </section>
+
+        <!-- Weather Details -->
+        <section class="details-grid" id="detailsGrid">
+            <!-- Will be populated by JS -->
+        </section>
+
+        <!-- Air Quality -->
+        <section class="air-quality" id="airQuality">
+            <!-- Will be populated by JS -->
+        </section>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading weather data...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
