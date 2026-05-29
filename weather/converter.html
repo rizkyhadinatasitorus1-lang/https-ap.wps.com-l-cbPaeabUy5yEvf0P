@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Converter</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .converter-section {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            max-width: 600px;
+            margin: 30px auto;
+        }
+        .converter-title {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .converter-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .converter-input-group label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        .converter-input-group input {
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1.1em;
+            background: var(--card-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        .converter-input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .converter-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: var(--primary-color);
+            align-self: flex-end;
+            margin-bottom: 12px;
+        }
+        .converter-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .result-card {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .result-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .result-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .preset-btn {
+            padding: 10px 15px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .preset-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .info-box p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-thermometer-half"></i> Temperature Converter</h1>
+                <p>Convert between Celsius, Fahrenheit, and Kelvin</p>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="index.html" style="color: white; margin-left: 10px; text-decoration: none;">
+                    <button style="background: rgba(255, 255, 255, 0.2); color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </a>
+            </div>
+        </header>
+
+        <section class="converter-section">
+            <div class="converter-title">
+                <i class="fas fa-exchange-alt"></i> Unit Converter
+            </div>
+
+            <div class="info-box">
+                <p><strong>📊 Temperature Scales:</strong></p>
+                <p>Celsius (°C): Water freezes at 0°C, boils at 100°C</p>
+                <p>Fahrenheit (°F): Water freezes at 32°F, boils at 212°F</p>
+                <p>Kelvin (K): Absolute zero at 0K, water freezes at 273.15K</p>
+            </div>
+
+            <div class="converter-grid">
+                <div class="converter-input-group">
+                    <label for="celsius">Celsius (°C)</label>
+                    <input type="number" id="celsius" placeholder="Enter temperature" step="0.01">
+                </div>
+                <div class="converter-input-group">
+                    <label for="fahrenheit">Fahrenheit (°F)</label>
+                    <input type="number" id="fahrenheit" placeholder="Enter temperature" step="0.01">
+                </div>
+            </div>
+
+            <div class="converter-input-group" style="margin-bottom: 30px;">
+                <label for="kelvin">Kelvin (K)</label>
+                <input type="number" id="kelvin" placeholder="Enter temperature" step="0.01">
+            </div>
+
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setPreset('water_freeze')">❄️ Water Freezes</button>
+                <button class="preset-btn" onclick="setPreset('room_temp')">🏠 Room Temp</button>
+                <button class="preset-btn" onclick="setPreset('body_temp')">🌡️ Body Temp</button>
+                <button class="preset-btn" onclick="setPreset('water_boil')">🔥 Water Boils</button>
+            </div>
+
+            <div class="converter-results" id="results">
+                <div class="result-card">
+                    <div class="result-label">Celsius</div>
+                    <div class="result-value" id="result-celsius">0°C</div>
+                </div>
+                <div class="result-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                    <div class="result-label">Fahrenheit</div>
+                    <div class="result-value" id="result-fahrenheit">32°F</div>
+                </div>
+                <div class="result-card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                    <div class="result-label">Kelvin</div>
+                    <div class="result-value" id="result-kelvin">273.15K</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Theme Management
+        const themeToggle = document.getElementById('themeToggle');
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+
+        // Temperature Conversion
+        const celsiusInput = document.getElementById('celsius');
+        const fahrenheitInput = document.getElementById('fahrenheit');
+        const kelvinInput = document.getElementById('kelvin');
+
+        function convertFromCelsius(c) {
+            return {
+                celsius: parseFloat(c),
+                fahrenheit: (parseFloat(c) * 9/5) + 32,
+                kelvin: parseFloat(c) + 273.15
+            };
+        }
+
+        function convertFromFahrenheit(f) {
+            const c = (parseFloat(f) - 32) * 5/9;
+            return {
+                celsius: c,
+                fahrenheit: parseFloat(f),
+                kelvin: c + 273.15
+            };
+        }
+
+        function convertFromKelvin(k) {
+            const c = parseFloat(k) - 273.15;
+            return {
+                celsius: c,
+                fahrenheit: (c * 9/5) + 32,
+                kelvin: parseFloat(k)
+            };
+        }
+
+        function updateResults() {
+            let temps;
+            const c = celsiusInput.value;
+            const f = fahrenheitInput.value;
+            const k = kelvinInput.value;
+
+            if (c !== '') {
+                temps = convertFromCelsius(c);
+            } else if (f !== '') {
+                temps = convertFromFahrenheit(f);
+            } else if (k !== '') {
+                temps = convertFromKelvin(k);
+            } else {
+                temps = { celsius: 0, fahrenheit: 32, kelvin: 273.15 };
+            }
+
+            // Update inputs
+            if (c === '') celsiusInput.value = temps.celsius.toFixed(2);
+            if (f === '') fahrenheitInput.value = temps.fahrenheit.toFixed(2);
+            if (k === '') kelvinInput.value = temps.kelvin.toFixed(2);
+
+            // Update results
+            document.getElementById('result-celsius').textContent = temps.celsius.toFixed(2) + '°C';
+            document.getElementById('result-fahrenheit').textContent = temps.fahrenheit.toFixed(2) + '°F';
+            document.getElementById('result-kelvin').textContent = temps.kelvin.toFixed(2) + 'K';
+        }
+
+        function setPreset(type) {
+            let temps;
+            switch(type) {
+                case 'water_freeze':
+                    temps = convertFromCelsius(0);
+                    break;
+                case 'room_temp':
+                    temps = convertFromCelsius(20);
+                    break;
+                case 'body_temp':
+                    temps = convertFromCelsius(37);
+                    break;
+                case 'water_boil':
+                    temps = convertFromCelsius(100);
+                    break;
+                default:
+                    temps = { celsius: 0, fahrenheit: 32, kelvin: 273.15 };
+            }
+            celsiusInput.value = temps.celsius.toFixed(2);
+            fahrenheitInput.value = temps.fahrenheit.toFixed(2);
+            kelvinInput.value = temps.kelvin.toFixed(2);
+            updateResults();
+        }
+
+        // Event listeners
+        celsiusInput.addEventListener('input', updateResults);
+        fahrenheitInput.addEventListener('input', updateResults);
+        kelvinInput.addEventListener('input', updateResults);
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            updateResults();
+        });
+    </script>
+</body>
+</html>

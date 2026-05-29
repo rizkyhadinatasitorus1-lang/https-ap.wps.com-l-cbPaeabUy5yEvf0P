@@ -113,4 +113,117 @@ contract TokenStaking is Ownable, ReentrancyGuard {
     
     /**
      * @dev Calculate pending rewards
-     * @param user User address\n     */\n    function calculateRewards(address user) public view returns (uint256) {\n        if (!hasStaked[user]) {\n            return 0;\n        }\n        \n        StakeInfo storage stakeInfo = stakes[user];\n        uint256 stakingDuration = block.timestamp - stakeInfo.lastRewardTime;\n        \n        // Calculate rewards: (amount * rewardRate * duration) / (365 days * 100)\n        uint256 rewards = (stakeInfo.amount * rewardRate * stakingDuration) / \n                         (365 days * 100);\n        \n        return rewards;\n    }\n    \n    /**\n     * @dev Claim rewards\n     */\n    function claimReward() public nonReentrant {\n        require(hasStaked[msg.sender], \"No staking position\");\n        \n        uint256 rewards = calculateRewards(msg.sender);\n        require(rewards > 0, \"No rewards available\");\n        \n        StakeInfo storage stakeInfo = stakes[msg.sender];\n        stakeInfo.lastRewardTime = block.timestamp;\n        stakeInfo.totalRewardsClaimed += rewards;\n        \n        totalRewardsDistributed += rewards;\n        \n        // Transfer rewards to user\n        require(token.transfer(msg.sender, rewards), \"Transfer failed\");\n        \n        emit RewardClaimed(msg.sender, rewards);\n    }\n    \n    /**\n     * @dev Get user staking info\n     * @param user User address\n     */\n    function getStakeInfo(address user) external view returns (\n        uint256 amount,\n        uint256 startTime,\n        uint256 pendingRewards,\n        uint256 totalRewardsClaimed,\n        bool locked\n    ) {\n        StakeInfo storage stakeInfo = stakes[user];\n        uint256 stakingDuration = block.timestamp - stakeInfo.startTime;\n        bool isLocked = stakingDuration < lockPeriod && stakeInfo.amount > 0;\n        \n        return (\n            stakeInfo.amount,\n            stakeInfo.startTime,\n            calculateRewards(user),\n            stakeInfo.totalRewardsClaimed,\n            isLocked\n        );\n    }\n    \n    /**\n     * @dev Update reward rate (only owner)\n     * @param newRate New reward rate\n     */\n    function setRewardRate(uint256 newRate) external onlyOwner {\n        require(newRate <= 100, \"Rate cannot exceed 100%\");\n        rewardRate = newRate;\n        emit RewardRateUpdated(newRate);\n    }\n    \n    /**\n     * @dev Update lock period (only owner)\n     * @param newPeriod New lock period in seconds\n     */\n    function setLockPeriod(uint256 newPeriod) external onlyOwner {\n        lockPeriod = newPeriod;\n        emit LockPeriodUpdated(newPeriod);\n    }\n    \n    /**\n     * @dev Update minimum stake amount\n     * @param newAmount New minimum amount\n     */\n    function setMinStakeAmount(uint256 newAmount) external onlyOwner {\n        minStakeAmount = newAmount;\n    }\n    \n    /**\n     * @dev Update maximum stake amount\n     * @param newAmount New maximum amount\n     */\n    function setMaxStakeAmount(uint256 newAmount) external onlyOwner {\n        maxStakeAmount = newAmount;\n    }\n    \n    /**\n     * @dev Get total staking stats\n     */\n    function getStakingStats() external view returns (\n        uint256 totalStakedAmount,\n        uint256 totalDistributedRewards,\n        uint256 currentRewardRate,\n        uint256 lockPeriodSeconds\n    ) {\n        return (\n            totalStaked,\n            totalRewardsDistributed,\n            rewardRate,\n            lockPeriod\n        );\n    }\n}\n
+     * @param user User address
+     */
+    function calculateRewards(address user) public view returns (uint256) {
+        if (!hasStaked[user]) {
+            return 0;
+        }
+        
+        StakeInfo storage stakeInfo = stakes[user];
+        uint256 stakingDuration = block.timestamp - stakeInfo.lastRewardTime;
+        
+        // Calculate rewards: (amount * rewardRate * duration) / (365 days * 100)
+        uint256 rewards = (stakeInfo.amount * rewardRate * stakingDuration) / 
+                         (365 days * 100);
+        
+        return rewards;
+    }
+    
+    /**
+     * @dev Claim rewards
+     */
+    function claimReward() public nonReentrant {
+        require(hasStaked[msg.sender], "No staking position");
+        
+        uint256 rewards = calculateRewards(msg.sender);
+        require(rewards > 0, "No rewards available");
+        
+        StakeInfo storage stakeInfo = stakes[msg.sender];
+        stakeInfo.lastRewardTime = block.timestamp;
+        stakeInfo.totalRewardsClaimed += rewards;
+        
+        totalRewardsDistributed += rewards;
+        
+        // Transfer rewards to user
+        require(token.transfer(msg.sender, rewards), "Transfer failed");
+        
+        emit RewardClaimed(msg.sender, rewards);
+    }
+    
+    /**
+     * @dev Get user staking info
+     * @param user User address
+     */
+    function getStakeInfo(address user) external view returns (
+        uint256 amount,
+        uint256 startTime,
+        uint256 pendingRewards,
+        uint256 totalRewardsClaimed,
+        bool locked
+    ) {
+        StakeInfo storage stakeInfo = stakes[user];
+        uint256 stakingDuration = block.timestamp - stakeInfo.startTime;
+        bool isLocked = stakingDuration < lockPeriod && stakeInfo.amount > 0;
+        
+        return (
+            stakeInfo.amount,
+            stakeInfo.startTime,
+            calculateRewards(user),
+            stakeInfo.totalRewardsClaimed,
+            isLocked
+        );
+    }
+    
+    /**
+     * @dev Update reward rate (only owner)
+     * @param newRate New reward rate
+     */
+    function setRewardRate(uint256 newRate) external onlyOwner {
+        require(newRate <= 100, "Rate cannot exceed 100%");
+        rewardRate = newRate;
+        emit RewardRateUpdated(newRate);
+    }
+    
+    /**
+     * @dev Update lock period (only owner)
+     * @param newPeriod New lock period in seconds
+     */
+    function setLockPeriod(uint256 newPeriod) external onlyOwner {
+        lockPeriod = newPeriod;
+        emit LockPeriodUpdated(newPeriod);
+    }
+    
+    /**
+     * @dev Update minimum stake amount
+     * @param newAmount New minimum amount
+     */
+    function setMinStakeAmount(uint256 newAmount) external onlyOwner {
+        minStakeAmount = newAmount;
+    }
+    
+    /**
+     * @dev Update maximum stake amount
+     * @param newAmount New maximum amount
+     */
+    function setMaxStakeAmount(uint256 newAmount) external onlyOwner {
+        maxStakeAmount = newAmount;
+    }
+    
+    /**
+     * @dev Get total staking stats
+     */
+    function getStakingStats() external view returns (
+        uint256 totalStakedAmount,
+        uint256 totalDistributedRewards,
+        uint256 currentRewardRate,
+        uint256 lockPeriodSeconds
+    ) {
+        return (
+            totalStaked,
+            totalRewardsDistributed,
+            rewardRate,
+            lockPeriod
+        );
+    }
+}

@@ -1,1 +1,131 @@
-const { expect } = require(\"chai\");\nconst { ethers } = require(\"hardhat\");\n\ndescribe(\"TokenStaking\", function () {\n  let myToken;\n  let staking;\n  let owner;\n  let addr1;\n  let addr2;\n  const INITIAL_SUPPLY = 1000000;\n  const STAKE_AMOUNT = ethers.parseUnits(\"1000\", 18);\n  const REWARD_RATE = 10; // 10% APY\n\n  beforeEach(async function () {\n    [owner, addr1, addr2] = await ethers.getSigners();\n\n    // Deploy MyToken\n    const MyToken = await ethers.getContractFactory(\"MyToken\");\n    myToken = await MyToken.deploy(INITIAL_SUPPLY);\n    await myToken.waitForDeployment();\n\n    // Deploy TokenStaking\n    const TokenStaking = await ethers.getContractFactory(\"TokenStaking\");\n    staking = await TokenStaking.deploy(await myToken.getAddress());\n    await staking.waitForDeployment();\n\n    // Transfer tokens to addr1\n    await myToken.transfer(\n      addr1.address,\n      ethers.parseUnits(\"50000\", 18)\n    );\n\n    // Approve staking contract\n    await myToken.connect(addr1).approve(\n      await staking.getAddress(),\n      ethers.parseUnits(\"50000\", 18)\n    );\n  });\n\n  describe(\"Staking\", function () {\n    it(\"Should stake tokens\", async function () {\n      await staking.connect(addr1).stake(STAKE_AMOUNT);\n      const stakeInfo = await staking.getStakeInfo(addr1.address);\n      expect(stakeInfo.amount).to.equal(STAKE_AMOUNT);\n    });\n\n    it(\"Should reject stake below minimum\", async function () {\n      const tooSmallAmount = ethers.parseUnits(\"0.5\", 18);\n      await expect(\n        staking.connect(addr1).stake(tooSmallAmount)\n      ).to.be.revertedWith(\"Amount below minimum stake\");\n    });\n\n    it(\"Should reject stake exceeding maximum\", async function () {\n      const tooLargeAmount = ethers.parseUnits(\"2000000\", 18);\n      await expect(\n        staking.connect(addr1).stake(tooLargeAmount)\n      ).to.be.revertedWith(\"Amount exceeds maximum stake\");\n    });\n\n    it(\"Should increase total staked\", async function () {\n      await staking.connect(addr1).stake(STAKE_AMOUNT);\n      const stats = await staking.getStakingStats();\n      expect(stats.totalStakedAmount).to.equal(STAKE_AMOUNT);\n    });\n  });\n\n  describe(\"Unstaking\", function () {\n    beforeEach(async function () {\n      await staking.connect(addr1).stake(STAKE_AMOUNT);\n    });\n\n    it(\"Should not allow unstaking before lock period\", async function () {\n      await expect(\n        staking.connect(addr1).unstake(STAKE_AMOUNT)\n      ).to.be.revertedWith(\"Tokens still locked\");\n    });\n\n    it(\"Should allow unstaking after lock period\", async function () {\n      // Wait 7 days\n      await ethers.provider.send(\"hardhat_mine\", [\"0x15180\"]); // ~7 days in blocks\n      \n      const initialBalance = await myToken.balanceOf(addr1.address);\n      await staking.connect(addr1).unstake(STAKE_AMOUNT);\n      \n      const finalBalance = await myToken.balanceOf(addr1.address);\n      expect(finalBalance).to.be.gt(initialBalance);\n    });\n  });\n\n  describe(\"Rewards\", function () {\n    beforeEach(async function () {\n      await staking.connect(addr1).stake(STAKE_AMOUNT);\n    });\n\n    it(\"Should calculate rewards\", async function () {\n      // Wait some time\n      await ethers.provider.send(\"hardhat_mine\", [\"100\"]);\n      \n      const rewards = await staking.calculateRewards(addr1.address);\n      expect(rewards).to.be.gt(0);\n    });\n\n    it(\"Should claim rewards\", async function () {\n      // Wait some time\n      await ethers.provider.send(\"hardhat_mine\", [\"1000\"]);\n      \n      const initialBalance = await myToken.balanceOf(addr1.address);\n      const rewards = await staking.calculateRewards(addr1.address);\n      \n      await staking.connect(addr1).claimReward();\n      \n      const finalBalance = await myToken.balanceOf(addr1.address);\n      expect(finalBalance).to.equal(initialBalance + rewards);\n    });\n  });\n\n  describe(\"Configuration\", function () {\n    it(\"Should update reward rate\", async function () {\n      await staking.setRewardRate(15);\n      const stats = await staking.getStakingStats();\n      expect(stats.currentRewardRate).to.equal(15);\n    });\n\n    it(\"Should not allow invalid reward rate\", async function () {\n      await expect(\n        staking.setRewardRate(150)\n      ).to.be.revertedWith(\"Rate cannot exceed 100%\");\n    });\n  });\n});\n
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
+
+describe("TokenStaking", function () {
+  let myToken;
+  let staking;
+  let owner;
+  let addr1;
+  let addr2;
+  const INITIAL_SUPPLY = 1000000;
+  const STAKE_AMOUNT = ethers.parseUnits("1000", 18);
+  const REWARD_RATE = 10; // 10% APY
+
+  beforeEach(async function () {
+    [owner, addr1, addr2] = await ethers.getSigners();
+
+    // Deploy MyToken
+    const MyToken = await ethers.getContractFactory("MyToken");
+    myToken = await MyToken.deploy(INITIAL_SUPPLY);
+    await myToken.waitForDeployment();
+
+    // Deploy TokenStaking
+    const TokenStaking = await ethers.getContractFactory("TokenStaking");
+    staking = await TokenStaking.deploy(await myToken.getAddress());
+    await staking.waitForDeployment();
+
+    // Transfer tokens to addr1
+    await myToken.transfer(
+      addr1.address,
+      ethers.parseUnits("50000", 18)
+    );
+
+    // Approve staking contract
+    await myToken.connect(addr1).approve(
+      await staking.getAddress(),
+      ethers.parseUnits("50000", 18)
+    );
+  });
+
+  describe("Staking", function () {
+    it("Should stake tokens", async function () {
+      await staking.connect(addr1).stake(STAKE_AMOUNT);
+      const stakeInfo = await staking.getStakeInfo(addr1.address);
+      expect(stakeInfo.amount).to.equal(STAKE_AMOUNT);
+    });
+
+    it("Should reject stake below minimum", async function () {
+      const tooSmallAmount = ethers.parseUnits("0.5", 18);
+      await expect(
+        staking.connect(addr1).stake(tooSmallAmount)
+      ).to.be.revertedWith("Amount below minimum stake");
+    });
+
+    it("Should reject stake exceeding maximum", async function () {
+      const tooLargeAmount = ethers.parseUnits("2000000", 18);
+      await expect(
+        staking.connect(addr1).stake(tooLargeAmount)
+      ).to.be.revertedWith("Amount exceeds maximum stake");
+    });
+
+    it("Should increase total staked", async function () {
+      await staking.connect(addr1).stake(STAKE_AMOUNT);
+      const stats = await staking.getStakingStats();
+      expect(stats.totalStakedAmount).to.equal(STAKE_AMOUNT);
+    });
+  });
+
+  describe("Unstaking", function () {
+    beforeEach(async function () {
+      await staking.connect(addr1).stake(STAKE_AMOUNT);
+    });
+
+    it("Should not allow unstaking before lock period", async function () {
+      await expect(
+        staking.connect(addr1).unstake(STAKE_AMOUNT)
+      ).to.be.revertedWith("Tokens still locked");
+    });
+
+    it("Should allow unstaking after lock period", async function () {
+      // Wait 7 days
+      await ethers.provider.send("hardhat_mine", ["0x15180"]); // ~7 days in blocks
+      
+      const initialBalance = await myToken.balanceOf(addr1.address);
+      await staking.connect(addr1).unstake(STAKE_AMOUNT);
+      
+      const finalBalance = await myToken.balanceOf(addr1.address);
+      expect(finalBalance).to.be.gt(initialBalance);
+    });
+  });
+
+  describe("Rewards", function () {
+    beforeEach(async function () {
+      await staking.connect(addr1).stake(STAKE_AMOUNT);
+    });
+
+    it("Should calculate rewards", async function () {
+      // Wait some time
+      await ethers.provider.send("hardhat_mine", ["100"]);
+      
+      const rewards = await staking.calculateRewards(addr1.address);
+      expect(rewards).to.be.gt(0);
+    });
+
+    it("Should claim rewards", async function () {
+      // Wait some time
+      await ethers.provider.send("hardhat_mine", ["1000"]);
+      
+      const initialBalance = await myToken.balanceOf(addr1.address);
+      const rewards = await staking.calculateRewards(addr1.address);
+      
+      await staking.connect(addr1).claimReward();
+      
+      const finalBalance = await myToken.balanceOf(addr1.address);
+      expect(finalBalance).to.equal(initialBalance + rewards);
+    });
+  });
+
+  describe("Configuration", function () {
+    it("Should update reward rate", async function () {
+      await staking.setRewardRate(15);
+      const stats = await staking.getStakingStats();
+      expect(stats.currentRewardRate).to.equal(15);
+    });
+
+    it("Should not allow invalid reward rate", async function () {
+      await expect(
+        staking.setRewardRate(150)
+      ).to.be.revertedWith("Rate cannot exceed 100%");
+    });
+  });
+});
